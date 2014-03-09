@@ -3,8 +3,10 @@ package edu.sjsu.cmpe.library.repository;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
+import edu.sjsu.cmpe.library.domain.Author;
 import edu.sjsu.cmpe.library.domain.Book;
 
 public class BookRepository implements BookRepositoryInterface {
@@ -13,6 +15,7 @@ public class BookRepository implements BookRepositoryInterface {
 
     /** Never access this key directly; instead use generateISBNKey() */
     private long isbnKey;
+    private long authorId;
 
     public BookRepository(ConcurrentHashMap<Long, Book> bookMap) {
 	checkNotNull(bookMap, "bookMap must not be null for BookRepository");
@@ -41,6 +44,11 @@ public class BookRepository implements BookRepositoryInterface {
 	Long isbn = generateISBNKey();
 	newBook.setIsbn(isbn);
 	// TODO: create and associate other fields such as author
+	
+	ArrayList<Author> authors = newBook.getAuthors();
+	for(int i=0; i<authors.size(); i++){
+		authors.get(i).setId(++authorId);
+	}
 
 	// Finally, save the new book into the map
 	bookInMemoryMap.putIfAbsent(isbn, newBook);
@@ -48,6 +56,15 @@ public class BookRepository implements BookRepositoryInterface {
 	return newBook;
     }
 
+    /**
+     * This will delete a particular book from map.
+     */
+    public void deleteBook(Long isbn) {
+    	checkArgument(isbn>0);
+		// Finally, delete the old book from the map
+		bookInMemoryMap.remove(isbn);
+    }
+    
     /**
      * @see edu.sjsu.cmpe.library.repository.BookRepositoryInterface#getBookByISBN(java.lang.Long)
      */
@@ -57,5 +74,7 @@ public class BookRepository implements BookRepositoryInterface {
 		"ISBN was %s but expected greater than zero value", isbn);
 	return bookInMemoryMap.get(isbn);
     }
+    
+    
 
 }
